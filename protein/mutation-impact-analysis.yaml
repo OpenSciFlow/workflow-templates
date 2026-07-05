@@ -1,0 +1,46 @@
+schema_version: "opensciflow.workflow/v0.1"
+workflow_name: "mutation-impact-analysis"
+domain: ["protein-engineering", "structural-biology"]
+task_description: "Estimate the structural/dynamic impact of a mutation using structure prediction, optional relaxation, and local analysis."
+inputs:
+  - { name: "wildtype_sequence_or_structure", type: "file", formats: ["fasta", "pdb"], required: true }
+  - { name: "mutation", type: "string", required: true }
+outputs:
+  - "mutant_structure.pdb"
+  - "comparison_metrics.csv"
+  - "mutation_report.md"
+plugins:
+  required: ["structure-preparation"]
+  optional: ["colabfold-structure-prediction", "openmm-relaxation", "proteinflux-conformational-dynamics"]
+fallbacks:
+  - if: "GPU unavailable"
+    use: "user-provided mutant structure or lightweight structural comparison only"
+steps:
+  - { id: "parse_mutation", description: "Validate mutation notation." }
+  - { id: "prepare_wildtype", description: "Prepare wildtype sequence/structure.", depends_on: ["parse_mutation"] }
+  - { id: "generate_or_load_mutant", description: "Generate/load mutant structure.", depends_on: ["prepare_wildtype"] }
+  - { id: "compare_structures", description: "Compute local structural changes.", depends_on: ["generate_or_load_mutant"] }
+  - { id: "report", description: "Generate report with caveats.", depends_on: ["compare_structures"] }
+dag:
+  parse_mutation: []
+  prepare_wildtype: ["parse_mutation"]
+  generate_or_load_mutant: ["prepare_wildtype"]
+  compare_structures: ["generate_or_load_mutant"]
+  report: ["compare_structures"]
+estimated_runtime:
+  small: "5-30 min if structures are provided"
+  typical: "30 min to several hours with prediction"
+hardware:
+  cpu_cores_min: 4
+  memory_gb_min: 8
+  gpu: "optional"
+reproducibility:
+  record_model_versions: true
+  record_inputs_hash: true
+  record_confidence_scores: true
+report_template: "reports/mutation_impact.md.j2"
+example_dataset:
+  name: "single point mutation example"
+limitations:
+  - "Predicted mutation impact is a hypothesis and requires experimental validation."
+

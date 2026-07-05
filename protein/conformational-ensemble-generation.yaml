@@ -1,0 +1,46 @@
+schema_version: "opensciflow.workflow/v0.1"
+workflow_name: "conformational-ensemble-generation"
+domain: ["protein-dynamics", "generative-models"]
+task_description: "Generate or collect conformational ensembles and summarize structural diversity."
+inputs:
+  - { name: "protein_sequence_or_structure", type: "file", formats: ["fasta", "pdb"], required: true }
+outputs:
+  - "ensemble/"
+  - "cluster_summary.csv"
+  - "ensemble_report.md"
+plugins:
+  required: ["structure-analysis"]
+  optional: ["colabfold-structure-prediction", "proteinflux-conformational-dynamics", "openmm-sampling"]
+fallbacks:
+  - if: "generative model unavailable"
+    use: "user-provided ensemble or short OpenMM sampling"
+steps:
+  - { id: "prepare_input", description: "Validate sequence or structure." }
+  - { id: "generate_or_load_ensemble", description: "Generate/load conformations.", depends_on: ["prepare_input"] }
+  - { id: "align_ensemble", description: "Align ensemble structures.", depends_on: ["generate_or_load_ensemble"] }
+  - { id: "cluster_ensemble", description: "Cluster by structural similarity.", depends_on: ["align_ensemble"] }
+  - { id: "summarize_diversity", description: "Compute diversity and representative structures.", depends_on: ["cluster_ensemble"] }
+  - { id: "report", description: "Generate ensemble report.", depends_on: ["summarize_diversity"] }
+dag:
+  prepare_input: []
+  generate_or_load_ensemble: ["prepare_input"]
+  align_ensemble: ["generate_or_load_ensemble"]
+  cluster_ensemble: ["align_ensemble"]
+  summarize_diversity: ["cluster_ensemble"]
+  report: ["summarize_diversity"]
+estimated_runtime:
+  small: "10-60 min"
+hardware:
+  cpu_cores_min: 4
+  memory_gb_min: 8
+  gpu: "optional/recommended for model generation"
+reproducibility:
+  record_random_seed: true
+  record_model_versions: true
+  record_sampling_parameters: true
+report_template: "reports/conformational_ensemble.md.j2"
+example_dataset:
+  name: "small protein ensemble"
+limitations:
+  - "Generated ensembles may not represent thermodynamic equilibrium."
+

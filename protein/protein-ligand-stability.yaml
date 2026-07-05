@@ -1,0 +1,51 @@
+schema_version: "opensciflow.workflow/v0.1"
+workflow_name: "protein-ligand-stability-analysis"
+domain: ["computational-biology", "molecular-dynamics"]
+task_description: "Assess whether a protein-ligand complex remains stable in an existing or short MD trajectory."
+inputs:
+  - { name: "protein_structure", type: "file", formats: ["pdb", "gro"], required: true }
+  - { name: "trajectory", type: "file", formats: ["xtc", "dcd"], required: true }
+  - { name: "ligand_identifier", type: "string", required: false }
+outputs:
+  - "rmsd.csv"
+  - "rmsf.csv"
+  - "rg.csv"
+  - "ligand_contacts.csv"
+  - "stability_report.md"
+plugins:
+  required: ["mdanalysis-trajectory-analysis"]
+  optional: ["gromacs-md-stability", "mdtraj-analysis"]
+fallbacks:
+  - if: "gromacs missing"
+    use: "mdanalysis-only analysis"
+steps:
+  - { id: "validate_inputs", description: "Check structure, trajectory, atom counts, and ligand selection." }
+  - { id: "align_trajectory", description: "Align trajectory to protein backbone.", depends_on: ["validate_inputs"] }
+  - { id: "compute_metrics", description: "Compute RMSD, RMSF, Rg, and optional ligand contacts.", depends_on: ["align_trajectory"] }
+  - { id: "plot_metrics", description: "Create plots for stability metrics.", depends_on: ["compute_metrics"] }
+  - { id: "generate_report", description: "Generate a report with methods, results, warnings, and citations.", depends_on: ["plot_metrics"] }
+dag:
+  validate_inputs: []
+  align_trajectory: ["validate_inputs"]
+  compute_metrics: ["align_trajectory"]
+  plot_metrics: ["compute_metrics"]
+  generate_report: ["plot_metrics"]
+estimated_runtime:
+  small: "1-10 min"
+  typical: "10-60 min"
+hardware:
+  cpu_cores_min: 2
+  memory_gb_min: 4
+  gpu: false
+reproducibility:
+  record_inputs_hash: true
+  record_tool_versions: true
+  record_commands: true
+  record_environment: true
+report_template: "reports/protein_ligand_stability.md.j2"
+example_dataset:
+  name: "tiny protein-ligand trajectory"
+  license: "must be checked before public release"
+limitations:
+  - "Trajectory stability does not prove biological binding or drug efficacy."
+

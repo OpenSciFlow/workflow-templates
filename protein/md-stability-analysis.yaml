@@ -1,0 +1,51 @@
+schema_version: "opensciflow.workflow/v0.1"
+workflow_name: "molecular-dynamics-stability-analysis"
+domain: ["molecular-dynamics"]
+task_description: "Analyze an MD trajectory for structural stability and simulation quality."
+inputs:
+  - { name: "topology", type: "file", formats: ["pdb", "gro", "psf"], required: true }
+  - { name: "trajectory", type: "file", formats: ["xtc", "trr", "dcd"], required: true }
+outputs:
+  - "rmsd.csv"
+  - "rmsf.csv"
+  - "rg.csv"
+  - "quality_warnings.json"
+  - "md_stability_report.md"
+plugins:
+  required: ["mdanalysis-trajectory-analysis"]
+  optional: ["gromacs-md-stability", "mdtraj-analysis"]
+fallbacks:
+  - if: "MDAnalysis missing"
+    use: "MDTraj analysis"
+steps:
+  - { id: "load_inputs", description: "Load topology and trajectory." }
+  - { id: "check_quality", description: "Check frames, atom count, missing coordinates.", depends_on: ["load_inputs"] }
+  - { id: "compute_rmsd", description: "Backbone RMSD over time.", depends_on: ["check_quality"] }
+  - { id: "compute_rmsf", description: "Residue fluctuation profile.", depends_on: ["check_quality"] }
+  - { id: "compute_rg", description: "Radius of gyration over time.", depends_on: ["check_quality"] }
+  - { id: "report", description: "Generate report and reproducibility manifest.", depends_on: ["compute_rmsd", "compute_rmsf", "compute_rg"] }
+dag:
+  load_inputs: []
+  check_quality: ["load_inputs"]
+  compute_rmsd: ["check_quality"]
+  compute_rmsf: ["check_quality"]
+  compute_rg: ["check_quality"]
+  report: ["compute_rmsd", "compute_rmsf", "compute_rg"]
+estimated_runtime:
+  small: "1-5 min"
+  typical: "5-60 min"
+hardware:
+  cpu_cores_min: 2
+  memory_gb_min: 4
+  gpu: false
+reproducibility:
+  record_inputs_hash: true
+  record_tool_versions: true
+  record_commands: true
+  record_environment: true
+report_template: "reports/md_stability.md.j2"
+example_dataset:
+  name: "MDAnalysis sample trajectory or project-provided tiny trajectory"
+limitations:
+  - "Analysis quality depends on simulation setup and sampling length."
+

@@ -1,0 +1,46 @@
+schema_version: "opensciflow.workflow/v0.1"
+workflow_name: "ptm-dynamics-analysis"
+domain: ["post-translational-modification", "molecular-dynamics"]
+task_description: "Compare unmodified and PTM-modified protein structures or trajectories to identify dynamic changes."
+inputs:
+  - { name: "unmodified_structure_or_trajectory", type: "file", formats: ["pdb", "xtc", "dcd"], required: true }
+  - { name: "ptm_structure_or_trajectory", type: "file", formats: ["pdb", "xtc", "dcd"], required: true }
+  - { name: "ptm_site", type: "string", required: true }
+outputs:
+  - "delta_rmsf.csv"
+  - "site_environment.csv"
+  - "ptm_dynamics_report.md"
+plugins:
+  required: ["mdanalysis-trajectory-analysis"]
+  optional: ["proteinflux-conformational-dynamics", "gromacs-md-stability"]
+fallbacks:
+  - if: "only structures provided"
+    use: "static structural comparison"
+steps:
+  - { id: "validate_pairs", description: "Check that unmodified and PTM inputs are comparable." }
+  - { id: "align_structures_or_trajectories", description: "Align systems.", depends_on: ["validate_pairs"] }
+  - { id: "compute_local_changes", description: "Compute residue/site-level differences.", depends_on: ["align_structures_or_trajectories"] }
+  - { id: "compute_dynamics_delta", description: "Compare RMSF or ensemble metrics.", depends_on: ["align_structures_or_trajectories"] }
+  - { id: "report", description: "Generate PTM dynamics report.", depends_on: ["compute_local_changes", "compute_dynamics_delta"] }
+dag:
+  validate_pairs: []
+  align_structures_or_trajectories: ["validate_pairs"]
+  compute_local_changes: ["align_structures_or_trajectories"]
+  compute_dynamics_delta: ["align_structures_or_trajectories"]
+  report: ["compute_local_changes", "compute_dynamics_delta"]
+estimated_runtime:
+  small: "5-20 min for existing trajectories"
+hardware:
+  cpu_cores_min: 4
+  memory_gb_min: 8
+  gpu: false
+reproducibility:
+  record_ptm_definition: true
+  record_force_field_if_simulated: true
+  record_tool_versions: true
+report_template: "reports/ptm_dynamics.md.j2"
+example_dataset:
+  name: "paired unmodified/PTM sample"
+limitations:
+  - "PTM force-field quality can dominate results."
+

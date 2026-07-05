@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opensciflow.org/schemas/opensciflow-workflow-v0.1.schema.json",
+  "title": "OpenSciFlow Workflow Template v0.1",
+  "type": "object",
+  "required": ["schema_version", "workflow_name", "domain", "task_description", "inputs", "outputs", "steps", "dag", "plugins", "fallbacks", "estimated_runtime", "hardware", "reproducibility", "report_template", "example_dataset", "limitations"],
+  "properties": {
+    "schema_version": { "const": "opensciflow.workflow/v0.1" },
+    "workflow_name": { "type": "string" },
+    "domain": { "type": "array", "items": { "type": "string" } },
+    "task_description": { "type": "string" },
+    "inputs": { "type": "array" },
+    "outputs": { "type": "array" },
+    "steps": { "type": "array" },
+    "dag": { "type": "object" },
+    "plugins": { "type": "object" },
+    "fallbacks": { "type": "array" },
+    "estimated_runtime": { "type": "object" },
+    "hardware": { "type": "object" },
+    "reproducibility": { "type": "object" },
+    "report_template": { "type": "string" },
+    "example_dataset": { "type": "object" },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  }
+}
+
