@@ -5,4 +5,4 @@
 3. Add example dataset metadata for `md-stability-analysis`.
 4. Map each workflow step to a minimum plugin readiness level.
 5. Add run-record field expectations shared with BioPilot.
-6. Add one CI check for DAG consistency beyond JSON Schema validation.
+6. Extend DAG validation to check artifact handoff between steps.

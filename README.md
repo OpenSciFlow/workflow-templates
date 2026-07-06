@@ -64,6 +64,7 @@ Related conventions:
 
 - `docs/report-template-convention.md`
 - `docs/example-dataset-policy.md`
+- `docs/dag-validation.md`
 
 ## First reference workflow
 
