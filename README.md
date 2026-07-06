@@ -65,6 +65,7 @@ Related conventions:
 - `docs/report-template-convention.md`
 - `docs/example-dataset-policy.md`
 - `docs/dag-validation.md`
+- `docs/artifact-handoff-validation.md`
 
 ## First reference workflow
 

@@ -41,3 +41,9 @@ The validator requires:
 ## Why this matters
 
 OpenSciFlow templates are meant to be inspectable before execution. A broken DAG makes it unclear what a local agent should run, what can be skipped, and what artifacts should exist before report generation.
+
+## Next validation layer
+
+After DAG structure, the next planned check is artifact handoff validation:
+
+- `docs/artifact-handoff-validation.md`
