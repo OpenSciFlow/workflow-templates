@@ -43,7 +43,7 @@ Draft v0.1. These templates are intended for review and iteration.
 
 ## Review checklist
 
-Before merging a template, check:
+Short version before merging a template:
 
 - Is the scientific task boundary clear?
 - Are inputs and outputs concrete?
@@ -56,6 +56,15 @@ Before merging a template, check:
 - Are limitations explicit?
 - Does the template avoid overstating computational results as experimental proof?
 
+Full checklist:
+
+- `docs/workflow-review-checklist.md`
+
+Related conventions:
+
+- `docs/report-template-convention.md`
+- `docs/example-dataset-policy.md`
+
 ## First reference workflow
 
 The first recommended demo workflow is:
@@ -65,4 +74,3 @@ molecular-dynamics-stability-analysis
 ```
 
 It analyzes an existing protein MD trajectory and produces RMSD, RMSF, radius of gyration, plots, a report, and a run manifest.
-

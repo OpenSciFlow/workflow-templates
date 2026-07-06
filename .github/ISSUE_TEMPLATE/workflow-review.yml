@@ -1,0 +1,52 @@
+name: Workflow template review
+description: Review or correct an OpenSciFlow workflow template.
+title: "[workflow review] "
+labels: ["workflow-review"]
+body:
+  - type: input
+    id: template
+    attributes:
+      label: Workflow template
+      description: Path or link to the workflow template.
+      placeholder: protein/md-stability-analysis.yaml
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Suggested review outcome
+      options:
+        - needs-scope
+        - needs-plugins
+        - template-valid
+        - metadata-reviewed
+        - demo-ready
+        - report-ready
+        - not sure
+    validations:
+      required: true
+  - type: textarea
+    id: corrections
+    attributes:
+      label: Corrections
+      description: What is inaccurate, missing, unsafe, or too vague?
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Review areas checked
+      options:
+        - label: Task boundary
+        - label: Inputs and outputs
+        - label: Steps and DAG
+        - label: Plugin mapping
+        - label: Runtime and hardware
+        - label: Reproducibility metadata
+        - label: Report boundary
+        - label: Example dataset
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Any remaining uncertainty or follow-up question.
