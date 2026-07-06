@@ -1,0 +1,77 @@
+schema_version: "opensciflow.workflow/v0.1"
+workflow_name: "gromacs-rmsd-slurm-analysis"
+domain: ["molecular-dynamics", "hpc"]
+task_description: "Prepare and submit a reviewed Slurm wrapper for GROMACS RMSD analysis after explicit approval."
+inputs:
+  - { name: "topology", type: "file", formats: ["tpr", "pdb", "gro"], required: true }
+  - { name: "trajectory", type: "file", formats: ["xtc", "trr"], required: true }
+  - { name: "scheduler_account", type: "string", required: true }
+  - { name: "scheduler_partition", type: "string", required: true }
+outputs:
+  - { name: "rmsd_xvg", type: "file", formats: ["xvg"], required: true }
+  - { name: "slurm_stdout", type: "file", formats: ["out"], required: true }
+  - { name: "slurm_stderr", type: "file", formats: ["err"], required: true }
+  - { name: "run_record", type: "file", formats: ["json"], required: true }
+plugins:
+  required: ["gromacs-md-stability"]
+  optional: []
+fallbacks:
+  - if: "Slurm account, partition, or module policy is unknown"
+    use: "review-only mode; do not render a submission command"
+  - if: "GROMACS module is unavailable"
+    use: "record missing environment requirement; do not submit"
+steps:
+  - id: "check_cluster_inputs"
+    description: "Confirm topology, trajectory, account, and partition are declared by the user or local policy."
+    consumes: ["topology", "trajectory", "scheduler_account", "scheduler_partition"]
+    produces: ["validated_cluster_inputs"]
+  - id: "render_slurm_wrapper"
+    description: "Render a reviewed Slurm wrapper into the approved run directory."
+    depends_on: ["check_cluster_inputs"]
+    consumes: ["validated_cluster_inputs"]
+    produces: ["slurm_job_script"]
+  - id: "request_submission_approval"
+    description: "Show sbatch command, resources, logs, inputs, outputs, citations, and limitations before submission."
+    depends_on: ["render_slurm_wrapper"]
+    consumes: ["slurm_job_script"]
+    produces: ["approval_decision"]
+  - id: "submit_slurm_job"
+    description: "Submit the reviewed wrapper only after explicit approval."
+    depends_on: ["request_submission_approval"]
+    consumes: ["slurm_job_script", "approval_decision"]
+    produces: ["slurm_job_id", "rmsd_xvg", "slurm_stdout", "slurm_stderr"]
+  - id: "write_run_record"
+    description: "Write the planned, submitted, completed, or failed run record with scheduler metadata."
+    depends_on: ["submit_slurm_job"]
+    consumes: ["slurm_job_id", "rmsd_xvg", "slurm_stdout", "slurm_stderr"]
+    produces: ["run_record"]
+dag:
+  check_cluster_inputs: []
+  render_slurm_wrapper: ["check_cluster_inputs"]
+  request_submission_approval: ["render_slurm_wrapper"]
+  submit_slurm_job: ["request_submission_approval"]
+  write_run_record: ["submit_slurm_job"]
+estimated_runtime:
+  small: "scheduler-dependent; usually minutes after queue start for RMSD analysis"
+  typical: "scheduler-dependent"
+hardware:
+  cpu_cores_min: 4
+  memory_gb_min: 8
+  gpu: false
+  scheduler: "slurm"
+reproducibility:
+  record_inputs_hash: true
+  record_tool_versions: true
+  record_commands: true
+  record_environment: true
+  record_scheduler_metadata: true
+  record_stdout_stderr: true
+report_template: "reports/gromacs_rmsd_slurm.md.j2"
+example_dataset:
+  name: "user-provided tiny GROMACS-compatible trajectory"
+  status: "not bundled"
+limitations:
+  - "Slurm submission success is not scientific validation."
+  - "RMSD depends on topology, atom selection, alignment, and trajectory quality."
+  - "Cluster account, partition, module, filesystem, and walltime policy must be supplied by the user or local administrator."
+

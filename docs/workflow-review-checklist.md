@@ -41,12 +41,14 @@ A workflow template should describe a narrow scientific task that can be inspect
 - Are required and optional plugins separated?
 - Is the minimum acceptable readiness level stated?
 - Does the workflow avoid invoking unreviewed shell commands?
+- If the workflow uses Slurm or a wrapper script, is the reviewed-wrapper boundary explicit?
 
 ## 5. Runtime and hardware
 
 - Are small-demo and typical-run estimates separated?
 - Are CPU, memory, GPU, and storage requirements visible?
 - Is HPC/Slurm use optional unless the workflow truly requires it?
+- If Slurm is used, are account, partition, walltime, module/container, stdout, stderr, and approval requirements visible?
 
 ## 6. Reproducibility
 
@@ -54,6 +56,7 @@ A workflow template should describe a narrow scientific task that can be inspect
 - Does it record rendered commands and tool versions?
 - Does it record model-weight source and checksum when relevant?
 - Does it require logs, artifacts, citations, and limitations in the run record?
+- For Slurm workflows, does it record job id, rendered `sbatch` command, script path, stdout, stderr, and scheduler metadata?
 
 ## 7. Report boundary
 

@@ -12,6 +12,8 @@ Plugin manifests describe **how one tool/model runs**. Workflow templates descri
 
 Draft v0.1. These templates are intended for review and iteration.
 
+Current count: 6 protein-computing workflow templates.
+
 ## Required fields
 
 | Field | Purpose |
@@ -40,6 +42,7 @@ Draft v0.1. These templates are intended for review and iteration.
 - `protein/mutation-impact-analysis.yaml`
 - `protein/ptm-dynamics-analysis.yaml`
 - `protein/conformational-ensemble-generation.yaml`
+- `protein/gromacs-rmsd-slurm.yaml`
 
 ## Review checklist
 
@@ -66,6 +69,10 @@ Related conventions:
 - `docs/example-dataset-policy.md`
 - `docs/dag-validation.md`
 - `docs/artifact-handoff-validation.md`
+
+HPC-specific draft:
+
+- `protein/gromacs-rmsd-slurm.yaml`
 
 ## First reference workflow
 
