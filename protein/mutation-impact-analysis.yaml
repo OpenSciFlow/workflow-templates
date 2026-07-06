@@ -16,11 +16,11 @@ fallbacks:
   - if: "GPU unavailable"
     use: "user-provided mutant structure or lightweight structural comparison only"
 steps:
-  - { id: "parse_mutation", description: "Validate mutation notation." }
-  - { id: "prepare_wildtype", description: "Prepare wildtype sequence/structure.", depends_on: ["parse_mutation"] }
-  - { id: "generate_or_load_mutant", description: "Generate/load mutant structure.", depends_on: ["prepare_wildtype"] }
-  - { id: "compare_structures", description: "Compute local structural changes.", depends_on: ["generate_or_load_mutant"] }
-  - { id: "report", description: "Generate report with caveats.", depends_on: ["compare_structures"] }
+  - { id: "parse_mutation", description: "Validate mutation notation.", consumes: ["mutation"], produces: ["parsed_mutation"] }
+  - { id: "prepare_wildtype", description: "Prepare wildtype sequence/structure.", depends_on: ["parse_mutation"], consumes: ["wildtype_sequence_or_structure", "parsed_mutation"], produces: ["prepared_wildtype"] }
+  - { id: "generate_or_load_mutant", description: "Generate/load mutant structure.", depends_on: ["prepare_wildtype"], consumes: ["prepared_wildtype", "parsed_mutation"], produces: ["mutant_structure"] }
+  - { id: "compare_structures", description: "Compute local structural changes.", depends_on: ["generate_or_load_mutant"], consumes: ["prepared_wildtype", "mutant_structure"], produces: ["comparison_metrics"] }
+  - { id: "report", description: "Generate report with caveats.", depends_on: ["compare_structures"], consumes: ["mutant_structure", "comparison_metrics"], produces: ["mutation_report"] }
 dag:
   parse_mutation: []
   prepare_wildtype: ["parse_mutation"]

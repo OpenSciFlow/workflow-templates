@@ -2,11 +2,11 @@
 
 Artifact handoff validation checks whether outputs from one workflow step can satisfy inputs of later steps and final report generation.
 
-The current v0.1 validator checks schema and DAG structure. Artifact handoff validation is the next planned layer.
+The current v0.1 validator checks schema, DAG structure, plugin lists, and artifact handoff declarations for the initial protein templates.
 
-## Proposed v0.2 step fields
+## Step fields
 
-Workflow steps should be able to declare which named artifacts they consume and produce:
+Workflow steps declare which named artifacts they consume and produce:
 
 ```yaml
 steps:
@@ -31,16 +31,26 @@ Names in `produces` should refer to:
 - intermediate artifacts used by later steps;
 - top-level workflow `outputs`.
 
-## Validation rules
+## Current validation rules
 
-The validator should reject a workflow when:
+The validator rejects a workflow when:
 
 - a step consumes an artifact that is neither a workflow input nor produced by one of its dependencies;
 - a final workflow output is not produced by any step;
-- two steps produce the same artifact without an explicit merge or overwrite policy;
+- two steps produce the same artifact;
 - a report step does not consume the final scientific outputs it summarizes;
 - a step declares outputs that are never consumed and are not top-level workflow outputs;
-- a DAG dependency exists only for ordering but no artifact or rationale explains why.
+- a step lacks `consumes` or `produces`.
+
+## Not handled yet
+
+The validator does not yet model:
+
+- optional branches;
+- fallback-specific artifacts;
+- merge or overwrite policies;
+- report-template variable checks;
+- artifact file extensions or MIME types.
 
 ## MD stability target
 

@@ -52,6 +52,8 @@
         "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$" },
         "description": { "type": "string" },
         "plugin": { "type": "string" },
+        "consumes": { "type": "array", "items": { "type": "string" } },
+        "produces": { "type": "array", "items": { "type": "string" } },
         "inputs": { "type": "array" },
         "outputs": { "type": "array" },
         "manual_review": { "type": "boolean" }

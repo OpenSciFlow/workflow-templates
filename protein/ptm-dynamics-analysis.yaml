@@ -17,11 +17,11 @@ fallbacks:
   - if: "only structures provided"
     use: "static structural comparison"
 steps:
-  - { id: "validate_pairs", description: "Check that unmodified and PTM inputs are comparable." }
-  - { id: "align_structures_or_trajectories", description: "Align systems.", depends_on: ["validate_pairs"] }
-  - { id: "compute_local_changes", description: "Compute residue/site-level differences.", depends_on: ["align_structures_or_trajectories"] }
-  - { id: "compute_dynamics_delta", description: "Compare RMSF or ensemble metrics.", depends_on: ["align_structures_or_trajectories"] }
-  - { id: "report", description: "Generate PTM dynamics report.", depends_on: ["compute_local_changes", "compute_dynamics_delta"] }
+  - { id: "validate_pairs", description: "Check that unmodified and PTM inputs are comparable.", consumes: ["unmodified_structure_or_trajectory", "ptm_structure_or_trajectory", "ptm_site"], produces: ["comparable_inputs"] }
+  - { id: "align_structures_or_trajectories", description: "Align systems.", depends_on: ["validate_pairs"], consumes: ["comparable_inputs"], produces: ["aligned_inputs"] }
+  - { id: "compute_local_changes", description: "Compute residue/site-level differences.", depends_on: ["align_structures_or_trajectories"], consumes: ["aligned_inputs", "ptm_site"], produces: ["site_environment"] }
+  - { id: "compute_dynamics_delta", description: "Compare RMSF or ensemble metrics.", depends_on: ["align_structures_or_trajectories"], consumes: ["aligned_inputs"], produces: ["delta_rmsf"] }
+  - { id: "report", description: "Generate PTM dynamics report.", depends_on: ["compute_local_changes", "compute_dynamics_delta"], consumes: ["site_environment", "delta_rmsf"], produces: ["ptm_dynamics_report"] }
 dag:
   validate_pairs: []
   align_structures_or_trajectories: ["validate_pairs"]

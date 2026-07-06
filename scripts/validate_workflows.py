@@ -112,6 +112,143 @@ def validate_plugins(data: dict) -> list[str]:
     return errors
 
 
+def artifact_names(values: object, field: str) -> tuple[set[str], list[str]]:
+    errors: list[str] = []
+    names: set[str] = set()
+
+    if not isinstance(values, list):
+        return names, [f"{field} must be a list"]
+
+    for index, value in enumerate(values):
+        if not isinstance(value, dict):
+            errors.append(f"{field}[{index}] must be an object")
+            continue
+        name = value.get("name")
+        if not isinstance(name, str) or not name:
+            errors.append(f"{field}[{index}].name must be a non-empty string")
+            continue
+        if name in names:
+            errors.append(f"{field} contains duplicate artifact {name!r}")
+        names.add(name)
+
+    return names, errors
+
+
+def string_list(value: object, field: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+
+    if not isinstance(value, list):
+        return [], [f"{field} must be a list"]
+
+    items: list[str] = []
+    seen: set[str] = set()
+    for index, item in enumerate(value):
+        if not isinstance(item, str) or not item:
+            errors.append(f"{field}[{index}] must be a non-empty string")
+            continue
+        if item in seen:
+            errors.append(f"{field} contains duplicate artifact {item!r}")
+        seen.add(item)
+        items.append(item)
+
+    return items, errors
+
+
+def transitive_dependencies(node: str, dag: dict) -> set[str]:
+    dependencies: set[str] = set()
+    stack = list(dag.get(node, []))
+
+    while stack:
+        current = stack.pop()
+        if current in dependencies:
+            continue
+        dependencies.add(current)
+        if isinstance(dag.get(current), list):
+            stack.extend(dag[current])
+
+    return dependencies
+
+
+def validate_artifact_handoff(data: dict) -> list[str]:
+    errors: list[str] = []
+
+    steps = data.get("steps", [])
+    dag = data.get("dag", {})
+    if not isinstance(steps, list) or not isinstance(dag, dict):
+        return errors
+
+    workflow_inputs, input_errors = artifact_names(data.get("inputs", []), "inputs")
+    workflow_outputs, output_errors = artifact_names(data.get("outputs", []), "outputs")
+    errors.extend(input_errors)
+    errors.extend(output_errors)
+
+    step_by_id: dict[str, dict] = {}
+    for index, step in enumerate(steps):
+        current = step_id(step)
+        if current is None or not isinstance(step, dict):
+            continue
+        step_by_id[current] = step
+
+        consumes, consume_errors = string_list(step.get("consumes"), f"steps[{index}].consumes")
+        produces, produce_errors = string_list(step.get("produces"), f"steps[{index}].produces")
+        errors.extend(consume_errors)
+        errors.extend(produce_errors)
+
+        if not consumes:
+            errors.append(f"step {current!r} must consume at least one workflow input or upstream artifact")
+        if not produces:
+            errors.append(f"step {current!r} must produce at least one artifact")
+
+    produced_by: dict[str, str] = {}
+    consumed_artifacts: set[str] = set()
+    for current, step in step_by_id.items():
+        for artifact in step.get("consumes", []):
+            if isinstance(artifact, str):
+                consumed_artifacts.add(artifact)
+        for artifact in step.get("produces", []):
+            if not isinstance(artifact, str):
+                continue
+            if artifact in produced_by:
+                errors.append(
+                    f"artifact {artifact!r} is produced by both {produced_by[artifact]!r} and {current!r}"
+                )
+            produced_by[artifact] = current
+
+    produced_artifacts = set(produced_by)
+    for missing in sorted(workflow_outputs - produced_artifacts):
+        errors.append(f"workflow output {missing!r} is not produced by any step")
+
+    for current, step in step_by_id.items():
+        upstream_steps = transitive_dependencies(current, dag)
+        upstream_artifacts = {
+            artifact
+            for artifact, producer in produced_by.items()
+            if producer in upstream_steps
+        }
+        available = workflow_inputs | upstream_artifacts
+        for artifact in step.get("consumes", []):
+            if isinstance(artifact, str) and artifact not in available:
+                errors.append(
+                    f"step {current!r} consumes {artifact!r}, but it is not a workflow input or upstream artifact"
+                )
+
+    for artifact, producer in sorted(produced_by.items()):
+        if artifact not in workflow_outputs and artifact not in consumed_artifacts:
+            errors.append(f"artifact {artifact!r} produced by step {producer!r} is never consumed")
+
+    for current, step in step_by_id.items():
+        produces = {item for item in step.get("produces", []) if isinstance(item, str)}
+        consumes = {item for item in step.get("consumes", []) if isinstance(item, str)}
+        is_report_step = "report" in current or any("report" in item for item in produces)
+        if not is_report_step:
+            continue
+        expected_report_inputs = workflow_outputs - produces
+        for missing in sorted(expected_report_inputs - consumes):
+            errors.append(f"report step {current!r} does not consume final output {missing!r}")
+
+    return errors
+
+
 def main() -> None:
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     files = sorted(PROTEIN_DIR.glob("*.yaml"))
@@ -123,7 +260,7 @@ def main() -> None:
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
             jsonschema.validate(data, schema)
-            for error in validate_dag(data) + validate_plugins(data):
+            for error in validate_dag(data) + validate_plugins(data) + validate_artifact_handoff(data):
                 errors.append(f"{path.relative_to(ROOT)}: {error}")
         except Exception as exc:  # noqa: BLE001 - report all validation failures clearly.
             errors.append(f"{path.relative_to(ROOT)}: {exc}")

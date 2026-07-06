@@ -18,12 +18,12 @@ fallbacks:
   - if: "MDAnalysis missing"
     use: "MDTraj analysis"
 steps:
-  - { id: "load_inputs", description: "Load topology and trajectory." }
-  - { id: "check_quality", description: "Check frames, atom count, missing coordinates.", depends_on: ["load_inputs"] }
-  - { id: "compute_rmsd", description: "Backbone RMSD over time.", depends_on: ["check_quality"] }
-  - { id: "compute_rmsf", description: "Residue fluctuation profile.", depends_on: ["check_quality"] }
-  - { id: "compute_rg", description: "Radius of gyration over time.", depends_on: ["check_quality"] }
-  - { id: "report", description: "Generate report and reproducibility manifest.", depends_on: ["compute_rmsd", "compute_rmsf", "compute_rg"] }
+  - { id: "load_inputs", description: "Load topology and trajectory.", consumes: ["topology", "trajectory"], produces: ["loaded_universe"] }
+  - { id: "check_quality", description: "Check frames, atom count, missing coordinates.", depends_on: ["load_inputs"], consumes: ["loaded_universe"], produces: ["quality_warnings"] }
+  - { id: "compute_rmsd", description: "Backbone RMSD over time.", depends_on: ["check_quality"], consumes: ["loaded_universe"], produces: ["rmsd_csv"] }
+  - { id: "compute_rmsf", description: "Residue fluctuation profile.", depends_on: ["check_quality"], consumes: ["loaded_universe"], produces: ["rmsf_csv"] }
+  - { id: "compute_rg", description: "Radius of gyration over time.", depends_on: ["check_quality"], consumes: ["loaded_universe"], produces: ["rg_csv"] }
+  - { id: "report", description: "Generate report and reproducibility manifest.", depends_on: ["compute_rmsd", "compute_rmsf", "compute_rg"], consumes: ["rmsd_csv", "rmsf_csv", "rg_csv", "quality_warnings"], produces: ["md_stability_report"] }
 dag:
   load_inputs: []
   check_quality: ["load_inputs"]

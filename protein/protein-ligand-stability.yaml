@@ -19,11 +19,11 @@ fallbacks:
   - if: "gromacs missing"
     use: "mdanalysis-only analysis"
 steps:
-  - { id: "validate_inputs", description: "Check structure, trajectory, atom counts, and ligand selection." }
-  - { id: "align_trajectory", description: "Align trajectory to protein backbone.", depends_on: ["validate_inputs"] }
-  - { id: "compute_metrics", description: "Compute RMSD, RMSF, Rg, and optional ligand contacts.", depends_on: ["align_trajectory"] }
-  - { id: "plot_metrics", description: "Create plots for stability metrics.", depends_on: ["compute_metrics"] }
-  - { id: "generate_report", description: "Generate a report with methods, results, warnings, and citations.", depends_on: ["plot_metrics"] }
+  - { id: "validate_inputs", description: "Check structure, trajectory, atom counts, and ligand selection.", consumes: ["protein_structure", "trajectory", "ligand_identifier"], produces: ["validated_complex"] }
+  - { id: "align_trajectory", description: "Align trajectory to protein backbone.", depends_on: ["validate_inputs"], consumes: ["validated_complex"], produces: ["aligned_trajectory"] }
+  - { id: "compute_metrics", description: "Compute RMSD, RMSF, Rg, and optional ligand contacts.", depends_on: ["align_trajectory"], consumes: ["aligned_trajectory"], produces: ["rmsd_csv", "rmsf_csv", "rg_csv", "ligand_contacts_csv"] }
+  - { id: "plot_metrics", description: "Create plots for stability metrics.", depends_on: ["compute_metrics"], consumes: ["rmsd_csv", "rmsf_csv", "rg_csv", "ligand_contacts_csv"], produces: ["metrics_plots"] }
+  - { id: "generate_report", description: "Generate a report with methods, results, warnings, and citations.", depends_on: ["plot_metrics"], consumes: ["rmsd_csv", "rmsf_csv", "rg_csv", "ligand_contacts_csv", "metrics_plots"], produces: ["stability_report"] }
 dag:
   validate_inputs: []
   align_trajectory: ["validate_inputs"]

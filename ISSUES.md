@@ -6,4 +6,4 @@
 4. Add example dataset metadata for `md-stability-analysis`.
 5. Map each workflow step to a minimum plugin readiness level.
 6. Add run-record field expectations shared with BioPilot.
-7. Extend DAG validation to check artifact handoff between steps using `docs/artifact-handoff-validation.md`.
+7. Stress-test artifact handoff validation against optional branches and fallback tools.

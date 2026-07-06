@@ -15,12 +15,12 @@ fallbacks:
   - if: "generative model unavailable"
     use: "user-provided ensemble or short OpenMM sampling"
 steps:
-  - { id: "prepare_input", description: "Validate sequence or structure." }
-  - { id: "generate_or_load_ensemble", description: "Generate/load conformations.", depends_on: ["prepare_input"] }
-  - { id: "align_ensemble", description: "Align ensemble structures.", depends_on: ["generate_or_load_ensemble"] }
-  - { id: "cluster_ensemble", description: "Cluster by structural similarity.", depends_on: ["align_ensemble"] }
-  - { id: "summarize_diversity", description: "Compute diversity and representative structures.", depends_on: ["cluster_ensemble"] }
-  - { id: "report", description: "Generate ensemble report.", depends_on: ["summarize_diversity"] }
+  - { id: "prepare_input", description: "Validate sequence or structure.", consumes: ["protein_sequence_or_structure"], produces: ["prepared_input"] }
+  - { id: "generate_or_load_ensemble", description: "Generate/load conformations.", depends_on: ["prepare_input"], consumes: ["prepared_input"], produces: ["ensemble"] }
+  - { id: "align_ensemble", description: "Align ensemble structures.", depends_on: ["generate_or_load_ensemble"], consumes: ["ensemble"], produces: ["aligned_ensemble"] }
+  - { id: "cluster_ensemble", description: "Cluster by structural similarity.", depends_on: ["align_ensemble"], consumes: ["aligned_ensemble"], produces: ["cluster_summary"] }
+  - { id: "summarize_diversity", description: "Compute diversity and representative structures.", depends_on: ["cluster_ensemble"], consumes: ["aligned_ensemble", "cluster_summary"], produces: ["diversity_summary"] }
+  - { id: "report", description: "Generate ensemble report.", depends_on: ["summarize_diversity"], consumes: ["ensemble", "cluster_summary", "diversity_summary"], produces: ["ensemble_report"] }
 dag:
   prepare_input: []
   generate_or_load_ensemble: ["prepare_input"]
