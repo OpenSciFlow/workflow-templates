@@ -5,9 +5,9 @@ task_description: "Generate or collect conformational ensembles and summarize st
 inputs:
   - { name: "protein_sequence_or_structure", type: "file", formats: ["fasta", "pdb"], required: true }
 outputs:
-  - "ensemble/"
-  - "cluster_summary.csv"
-  - "ensemble_report.md"
+  - { name: "ensemble", type: "directory", formats: ["pdb", "cif", "xtc", "dcd"], required: true }
+  - { name: "cluster_summary", type: "file", formats: ["csv"], required: true }
+  - { name: "ensemble_report", type: "file", formats: ["md"], required: true }
 plugins:
   required: ["structure-analysis"]
   optional: ["colabfold-structure-prediction", "proteinflux-conformational-dynamics", "openmm-sampling"]
@@ -43,4 +43,3 @@ example_dataset:
   name: "small protein ensemble"
 limitations:
   - "Generated ensembles may not represent thermodynamic equilibrium."
-

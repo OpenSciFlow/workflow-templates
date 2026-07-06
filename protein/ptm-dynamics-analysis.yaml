@@ -7,9 +7,9 @@ inputs:
   - { name: "ptm_structure_or_trajectory", type: "file", formats: ["pdb", "xtc", "dcd"], required: true }
   - { name: "ptm_site", type: "string", required: true }
 outputs:
-  - "delta_rmsf.csv"
-  - "site_environment.csv"
-  - "ptm_dynamics_report.md"
+  - { name: "delta_rmsf", type: "file", formats: ["csv"], required: true }
+  - { name: "site_environment", type: "file", formats: ["csv"], required: true }
+  - { name: "ptm_dynamics_report", type: "file", formats: ["md"], required: true }
 plugins:
   required: ["mdanalysis-trajectory-analysis"]
   optional: ["proteinflux-conformational-dynamics", "gromacs-md-stability"]
@@ -43,4 +43,3 @@ example_dataset:
   name: "paired unmodified/PTM sample"
 limitations:
   - "PTM force-field quality can dominate results."
-

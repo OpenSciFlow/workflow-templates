@@ -6,11 +6,11 @@ inputs:
   - { name: "topology", type: "file", formats: ["pdb", "gro", "psf"], required: true }
   - { name: "trajectory", type: "file", formats: ["xtc", "trr", "dcd"], required: true }
 outputs:
-  - "rmsd.csv"
-  - "rmsf.csv"
-  - "rg.csv"
-  - "quality_warnings.json"
-  - "md_stability_report.md"
+  - { name: "rmsd_csv", type: "file", formats: ["csv"], required: true }
+  - { name: "rmsf_csv", type: "file", formats: ["csv"], required: true }
+  - { name: "rg_csv", type: "file", formats: ["csv"], required: true }
+  - { name: "quality_warnings", type: "file", formats: ["json"], required: true }
+  - { name: "md_stability_report", type: "file", formats: ["md"], required: true }
 plugins:
   required: ["mdanalysis-trajectory-analysis"]
   optional: ["gromacs-md-stability", "mdtraj-analysis"]
@@ -48,4 +48,3 @@ example_dataset:
   name: "MDAnalysis sample trajectory or project-provided tiny trajectory"
 limitations:
   - "Analysis quality depends on simulation setup and sampling length."
-

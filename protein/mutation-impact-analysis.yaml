@@ -6,9 +6,9 @@ inputs:
   - { name: "wildtype_sequence_or_structure", type: "file", formats: ["fasta", "pdb"], required: true }
   - { name: "mutation", type: "string", required: true }
 outputs:
-  - "mutant_structure.pdb"
-  - "comparison_metrics.csv"
-  - "mutation_report.md"
+  - { name: "mutant_structure", type: "file", formats: ["pdb"], required: true }
+  - { name: "comparison_metrics", type: "file", formats: ["csv"], required: true }
+  - { name: "mutation_report", type: "file", formats: ["md"], required: true }
 plugins:
   required: ["structure-preparation"]
   optional: ["colabfold-structure-prediction", "openmm-relaxation", "proteinflux-conformational-dynamics"]
@@ -43,4 +43,3 @@ example_dataset:
   name: "single point mutation example"
 limitations:
   - "Predicted mutation impact is a hypothesis and requires experimental validation."
-

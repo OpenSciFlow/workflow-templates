@@ -7,13 +7,20 @@
   "properties": {
     "schema_version": { "const": "opensciflow.workflow/v0.1" },
     "workflow_name": { "type": "string" },
-    "domain": { "type": "array", "items": { "type": "string" } },
+    "domain": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
     "task_description": { "type": "string" },
-    "inputs": { "type": "array" },
-    "outputs": { "type": "array" },
-    "steps": { "type": "array" },
-    "dag": { "type": "object" },
-    "plugins": { "type": "object" },
+    "inputs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/io_artifact" } },
+    "outputs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/io_artifact" } },
+    "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/workflow_step" } },
+    "dag": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+    "plugins": {
+      "type": "object",
+      "required": ["required", "optional"],
+      "properties": {
+        "required": { "type": "array", "items": { "type": "string" } },
+        "optional": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "fallbacks": { "type": "array" },
     "estimated_runtime": { "type": "object" },
     "hardware": { "type": "object" },
@@ -21,6 +28,35 @@
     "report_template": { "type": "string" },
     "example_dataset": { "type": "object" },
     "limitations": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "io_artifact": {
+      "type": "object",
+      "required": ["name", "type", "required"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$" },
+        "type": {
+          "type": "string",
+          "enum": ["file", "directory", "file-or-directory", "file-or-string", "string", "number", "integer", "boolean", "object"]
+        },
+        "formats": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "required": { "type": "boolean" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "workflow_step": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$" },
+        "description": { "type": "string" },
+        "plugin": { "type": "string" },
+        "inputs": { "type": "array" },
+        "outputs": { "type": "array" },
+        "manual_review": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
   }
 }
-

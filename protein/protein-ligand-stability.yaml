@@ -7,11 +7,11 @@ inputs:
   - { name: "trajectory", type: "file", formats: ["xtc", "dcd"], required: true }
   - { name: "ligand_identifier", type: "string", required: false }
 outputs:
-  - "rmsd.csv"
-  - "rmsf.csv"
-  - "rg.csv"
-  - "ligand_contacts.csv"
-  - "stability_report.md"
+  - { name: "rmsd_csv", type: "file", formats: ["csv"], required: true }
+  - { name: "rmsf_csv", type: "file", formats: ["csv"], required: true }
+  - { name: "rg_csv", type: "file", formats: ["csv"], required: true }
+  - { name: "ligand_contacts_csv", type: "file", formats: ["csv"], required: true }
+  - { name: "stability_report", type: "file", formats: ["md"], required: true }
 plugins:
   required: ["mdanalysis-trajectory-analysis"]
   optional: ["gromacs-md-stability", "mdtraj-analysis"]
@@ -48,4 +48,3 @@ example_dataset:
   license: "must be checked before public release"
 limitations:
   - "Trajectory stability does not prove biological binding or drug efficacy."
-
