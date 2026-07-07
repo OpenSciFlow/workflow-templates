@@ -9,7 +9,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "opensciflow-workflow.schema.json"
-PROTEIN_DIR = ROOT / "protein"
+TEMPLATE_DIRS = (ROOT / "protein", ROOT / "materials")
 
 
 def step_id(step: object) -> str | None:
@@ -251,7 +251,7 @@ def validate_artifact_handoff(data: dict) -> list[str]:
 
 def main() -> None:
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-    files = sorted(PROTEIN_DIR.glob("*.yaml"))
+    files = sorted(path for directory in TEMPLATE_DIRS for path in directory.glob("*.yaml"))
     if not files:
         raise SystemExit("No workflow templates found")
 

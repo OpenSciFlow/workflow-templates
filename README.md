@@ -12,7 +12,7 @@ Plugin manifests describe **how one tool/model runs**. Workflow templates descri
 
 Draft v0.1. These templates are intended for review and iteration.
 
-Current count: 6 protein-computing workflow templates.
+Current count: 7 draft workflow templates across protein computing and materials/atomistic modeling.
 
 ## Required fields
 
@@ -44,6 +44,10 @@ Current count: 6 protein-computing workflow templates.
 - `protein/conformational-ensemble-generation.yaml`
 - `protein/gromacs-rmsd-slurm.yaml`
 
+## Initial materials templates
+
+- `materials/mace-evaluation-slurm.yaml`
+
 ## Review checklist
 
 Short version before merging a template:
@@ -73,6 +77,7 @@ Related conventions:
 HPC-specific draft:
 
 - `protein/gromacs-rmsd-slurm.yaml`
+- `materials/mace-evaluation-slurm.yaml`
 
 ## First reference workflow
 

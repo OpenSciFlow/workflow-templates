@@ -1,0 +1,78 @@
+schema_version: "opensciflow.workflow/v0.1"
+workflow_name: "mace-evaluation-slurm"
+domain: ["materials-science", "atomistic-simulation", "hpc"]
+task_description: "Prepare and submit a reviewed Slurm wrapper for MACE model evaluation after explicit approval."
+inputs:
+  - { name: "configs_xyz", type: "file", formats: ["xyz", "extxyz"], required: true }
+  - { name: "model_file", type: "file", formats: ["model", "pt"], required: true }
+  - { name: "scheduler_account", type: "string", required: true }
+  - { name: "scheduler_partition", type: "string", required: true }
+outputs:
+  - { name: "evaluated_configs", type: "file", formats: ["xyz", "extxyz"], required: true }
+  - { name: "execution_log", type: "file", formats: ["log", "txt"], required: true }
+  - { name: "slurm_stdout", type: "file", formats: ["out"], required: true }
+  - { name: "slurm_stderr", type: "file", formats: ["err"], required: true }
+  - { name: "run_record", type: "file", formats: ["json"], required: true }
+plugins:
+  required: ["mace-interatomic-potential"]
+  optional: []
+fallbacks:
+  - if: "model file checksum, license, or citation metadata is missing"
+    use: "review-only mode; do not submit"
+  - if: "GPU partition or module policy is unknown"
+    use: "record missing scheduler requirement; do not submit"
+steps:
+  - id: "check_inputs"
+    description: "Confirm configs, model file, scheduler fields, model checksum, license, and citation metadata."
+    consumes: ["configs_xyz", "model_file", "scheduler_account", "scheduler_partition"]
+    produces: ["validated_inputs"]
+  - id: "render_slurm_wrapper"
+    description: "Render a reviewed Slurm wrapper into the approved run directory."
+    depends_on: ["check_inputs"]
+    consumes: ["validated_inputs"]
+    produces: ["slurm_job_script"]
+  - id: "request_submission_approval"
+    description: "Show model metadata, GPU request, wrapper, logs, expected outputs, citations, and limitations."
+    depends_on: ["render_slurm_wrapper"]
+    consumes: ["slurm_job_script"]
+    produces: ["approval_decision"]
+  - id: "submit_slurm_job"
+    description: "Submit the reviewed wrapper only after explicit approval."
+    depends_on: ["request_submission_approval"]
+    consumes: ["slurm_job_script", "approval_decision"]
+    produces: ["slurm_job_id", "evaluated_configs", "execution_log", "slurm_stdout", "slurm_stderr"]
+  - id: "write_run_record"
+    description: "Write planned, submitted, completed, or failed run record with scheduler and model-weight metadata."
+    depends_on: ["submit_slurm_job"]
+    consumes: ["slurm_job_id", "evaluated_configs", "execution_log", "slurm_stdout", "slurm_stderr"]
+    produces: ["run_record"]
+dag:
+  check_inputs: []
+  render_slurm_wrapper: ["check_inputs"]
+  request_submission_approval: ["render_slurm_wrapper"]
+  submit_slurm_job: ["request_submission_approval"]
+  write_run_record: ["submit_slurm_job"]
+estimated_runtime:
+  small: "scheduler-dependent; minutes for small configuration files after queue start"
+  typical: "depends on atom count, number of configurations, device, and model"
+hardware:
+  cpu_cores_min: 4
+  memory_gb_min: 16
+  gpu: "optional"
+  scheduler: "slurm"
+reproducibility:
+  record_inputs_hash: true
+  record_model_weight_hash: true
+  record_tool_versions: true
+  record_commands: true
+  record_environment: true
+  record_scheduler_metadata: true
+  record_stdout_stderr: true
+report_template: "reports/mace_evaluation_slurm.md.j2"
+example_dataset:
+  name: "user-provided small extxyz configuration set and user-provided MACE model"
+  status: "not bundled"
+limitations:
+  - "MACE predictions depend on model training domain, element coverage, configuration distribution, and device precision."
+  - "Model energies and forces are computational predictions, not universal ground truth."
+  - "Cluster account, partition, module, GPU policy, model license, and model checksum must be supplied before execution."
