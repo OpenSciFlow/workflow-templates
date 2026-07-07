@@ -54,6 +54,7 @@ A workflow template should describe a narrow scientific task that can be inspect
 
 - Does the workflow require input hashes?
 - Does it record rendered commands and tool versions?
+- Does it record the execution environment?
 - Does it record model-weight source and checksum when relevant?
 - Does it require logs, artifacts, citations, and limitations in the run record?
 - For Slurm workflows, does it record job id, rendered `sbatch` command, script path, stdout, stderr, and scheduler metadata?

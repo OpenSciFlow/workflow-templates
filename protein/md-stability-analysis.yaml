@@ -46,5 +46,6 @@ reproducibility:
 report_template: "reports/md_stability.md.j2"
 example_dataset:
   name: "MDAnalysis sample trajectory or project-provided tiny trajectory"
+  status: "candidate; license, citation, size, and hashes must be recorded before demo-ready status"
 limitations:
   - "Analysis quality depends on simulation setup and sampling length."

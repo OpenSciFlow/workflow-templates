@@ -35,11 +35,15 @@ hardware:
   memory_gb_min: 8
   gpu: false
 reproducibility:
+  record_inputs_hash: true
+  record_tool_versions: true
+  record_commands: true
+  record_environment: true
   record_ptm_definition: true
   record_force_field_if_simulated: true
-  record_tool_versions: true
 report_template: "reports/ptm_dynamics.md.j2"
 example_dataset:
   name: "paired unmodified/PTM sample"
+  status: "candidate; paired inputs and PTM definition must be public or regenerable before demo-ready status"
 limitations:
   - "PTM force-field quality can dominate results."

@@ -249,6 +249,45 @@ def validate_artifact_handoff(data: dict) -> list[str]:
     return errors
 
 
+def validate_reproducibility_policy(data: dict) -> list[str]:
+    errors: list[str] = []
+
+    reproducibility = data.get("reproducibility", {})
+    if not isinstance(reproducibility, dict):
+        return ["reproducibility must be an object"]
+
+    required_true_fields = (
+        "record_inputs_hash",
+        "record_tool_versions",
+        "record_commands",
+        "record_environment",
+    )
+    for field in required_true_fields:
+        if reproducibility.get(field) is not True:
+            errors.append(f"reproducibility.{field} must be true")
+
+    report_template = data.get("report_template")
+    if not isinstance(report_template, str) or not report_template:
+        errors.append("report_template must be a non-empty string")
+    elif not report_template.endswith(".j2"):
+        errors.append("report_template should point to a Jinja template ending in .j2")
+
+    example_dataset = data.get("example_dataset", {})
+    if not isinstance(example_dataset, dict):
+        errors.append("example_dataset must be an object")
+    else:
+        if not isinstance(example_dataset.get("name"), str) or not example_dataset["name"]:
+            errors.append("example_dataset.name must be a non-empty string")
+        if not example_dataset.get("license") and not example_dataset.get("status"):
+            errors.append("example_dataset must include license or status")
+
+    limitations = data.get("limitations", [])
+    if not isinstance(limitations, list) or not limitations:
+        errors.append("limitations must be a non-empty list")
+
+    return errors
+
+
 def main() -> None:
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     files = sorted(path for directory in TEMPLATE_DIRS for path in directory.glob("*.yaml"))
@@ -260,7 +299,13 @@ def main() -> None:
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
             jsonschema.validate(data, schema)
-            for error in validate_dag(data) + validate_plugins(data) + validate_artifact_handoff(data):
+            validators = (
+                validate_dag(data)
+                + validate_plugins(data)
+                + validate_artifact_handoff(data)
+                + validate_reproducibility_policy(data)
+            )
+            for error in validators:
                 errors.append(f"{path.relative_to(ROOT)}: {error}")
         except Exception as exc:  # noqa: BLE001 - report all validation failures clearly.
             errors.append(f"{path.relative_to(ROOT)}: {exc}")

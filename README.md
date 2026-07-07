@@ -73,6 +73,8 @@ Related conventions:
 - `docs/example-dataset-policy.md`
 - `docs/dag-validation.md`
 - `docs/artifact-handoff-validation.md`
+- `docs/reproducibility-validation.md`
+- `docs/protein-template-review-matrix.md`
 
 HPC-specific draft:
 
